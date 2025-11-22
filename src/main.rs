@@ -1,27 +1,14 @@
-use std::thread;
-use std::time::Duration;
+mod dryer;
 
-use rppal::gpio::Gpio;
-use rppal::i2c::I2c;
-use rppal::system::DeviceInfo;
+use std::{thread, time::Duration};
 
-// blinking LED example
-fn led_example() -> Result<(), Box<dyn Error>> {
-    println!("Blinking an LED on a {}.", DeviceInfo::new()?.model());
+use dryer::Dryer;
 
-    let mut pin = Gpio::new()?.get(GPIO_LED)?.into_output();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut dryer = Dryer::new();
 
-    // Blink every 500ms
-    pin.set_high();
-    thread::sleep(Duration::from_millis(500));
-    pin.set_low();
-
-    Ok(())
-}
-
-// Temp and Humid Sensor Skeleton
-fn temp_sensor_callback() {}
-
-fn main() {
-    println!("Hello, world!");
+    loop {
+        dryer.update();
+        thread::sleep(Duration::from_millis(1000));
+    }
 }
