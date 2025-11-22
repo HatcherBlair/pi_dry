@@ -1,6 +1,9 @@
 # Pi Dry
 ## A DIY Raspberry Pi based filament dryer. 
 
+### Video Link
+[Pi Dry Demo](https://youtu.be/kvUcSSZsg2s). Sorry about the audio quality when the fan is running. I thought my pgone would be better at noise rejection. 
+
 ### BOM 
 * Raspberry Pi 4B $60
 * [Bestol Room Heater](https://www.amazon.com/gp/product/B081NQH1BD/ref=ox_sc_act_title_6?smid=A3MM3IVRRE6BVX&th=1) 12V 120W PTC heater w/ 12V fan attached $21
