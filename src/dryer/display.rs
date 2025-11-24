@@ -1,7 +1,6 @@
-use std::vec;
+use rppal::i2c::I2c;
 
 use crate::dryer::lcd_interface;
-
 
 #[derive(Debug, PartialEq)]
 pub enum DisplayState {
@@ -10,8 +9,8 @@ pub enum DisplayState {
 }
 
 struct DiffContainer {
-    idx: usize,
-    text: Box<str>,
+    idx: u8,
+    text: String,
 }
 
 #[derive(Debug)]
@@ -27,38 +26,40 @@ impl Display {
     pub fn new() -> Self {
         Self {
             state: DisplayState::Idle,
-            line1_chars: [0x00; 39],
-            line2_chars: [0x00; 39],
+            line1_chars: [' '; 39],
+            line2_chars: [' '; 39],
         }
     }
 
-    pub fn update(&self, line1: &str, line2: &str) {
+    pub fn update(&mut self, i2c: &mut I2c, line1: &str, line2: &str) {
         // Diff the line1 against the chars
         // Write the difference
         // Update the char array
 
         //
-        let mut diffs: vec<DiffContainer> = Vec::new();
+        let mut diffs: Vec<DiffContainer> = Vec::new();
         let mut to_write = String::new();
         let mut cur_writing: bool = false;
-        let mut start_idx: usize = 0;
+        let mut start_idx: u8 = 0;
         for (i, char) in line1.chars().enumerate() {
-            if (char != self.line1_chars[i]) {
+            if char != self.line1_chars[i] {
                 if !cur_writing {
                     cur_writing = true;
-                    start_idx = i;
+                    start_idx = i as u8;
                 }
                 // Want to continue until we find a different char but I don't know ho
                 // how to do that in Rust
                 // Need a way to determine if we are currently building a string or not...
                 // What if we pushed onto a string and had a bool?
-                cur_writing = true;
                 to_write.push(char);
             } else {
-                if (cur_writing) {
+                if cur_writing {
                     cur_writing = false;
-                    diffs.push(
-                        {start_idx, Box::new(to_write.as_str())});
+                    diffs.push(DiffContainer {
+                        idx: start_idx,
+                        text: to_write.clone(),
+                    });
+                    to_write.clear();
                 }
             }
         }
@@ -66,16 +67,19 @@ impl Display {
         // Assume that is working, now we need to loop over the above and write the text
         for diff in diffs.into_iter() {
             lcd_interface::set_cursor(i2c, diff.idx, 0);
-            lcd_interface::print(i2c, diff.text);
-            
+            lcd_interface::print(i2c, diff.text.as_str());
         }
 
         // Do the same thing for line2
 
-
         // Overwrite the current lines?
         // This might cause some length issues?
-        self.line1_chars = line1.chars();
-        self.line2_chars = line2.chars();
+        for (i, c) in line1.chars().enumerate() {
+            self.line1_chars[i] = c;
+        }
+
+        for (i, c) in line2.chars().enumerate() {
+            self.line2_chars[i] = c;
+        }
     }
 }
